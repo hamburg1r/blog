@@ -1,0 +1,23 @@
+{
+  "look": "handDrawn",
+  "theme": "base",
+  "themeVariables": {
+    "darkMode": true,
+    "background": "#1a1b26",
+    "mainBkg": "#1a1b26",
+    "textColor": "#c0caf5",
+    "primaryColor": "#7aa2f7",
+    "primaryTextColor": "#c0caf5",
+    "primaryBorderColor": "#7aa2f7",
+    "lineColor": "#9ece6a",
+    "secondaryColor": "#bb9af7",
+    "tertiaryColor": "#7dcfff",
+    "nodeBorder": "#7aa2f7",
+    "nodeTextColor": "#c0caf5",
+    "edgeLabelBackground": "#1a1b26",
+    "clusterBkg": "#24283b",
+    "clusterBorder": "#414868",
+    "titleColor": "#f7768e",
+    "fontFamily": "ui-monospace"
+  }
+}
