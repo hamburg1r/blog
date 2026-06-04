@@ -1,7 +1,7 @@
 ---
-published: false
+published: true
 title: "Let's build a fake bank to learn backend engineering"
-cover_image: "./Cover.png"
+cover_image: "https://raw.githubusercontent.com/hamburg1r/blog/refs/heads/main/blogs/fake-bank/Cover.png"
 description: "Building a fake bank to learn backend engineering in public — DB design, DDD architecture, and the decisions behind it all. Follow along."
 tags: java, backend, beginners, learning
 series: Fake Bank, Real Problems
@@ -34,7 +34,7 @@ We are going to make a double accounting system. Which consists of: Payment/Tran
 
 And yes, there will be tests I'll be using AI for those. Yes, I absolutely despise writing test cases.
 
-We'll be using DDD architecture for our project not the typical MVC taught as the first step when learning Spring Boot. 
+We'll be using DDD architecture for our project not the typical MVC taught as the first step when learning Spring Boot.
 
 I have decided to keep users and their accounts separate because in future there might be multiple accounts for one user. Then every account can serve different purpose.
 
@@ -46,7 +46,8 @@ After all the basics are done we'll focus on kafka and later reconciliation.
 
 # The schema
 So, I have designed a rough schema for now. We'll update it as needed along the way.
-![DB Schema](./Schema.png)
+
+![DB Schema](https://raw.githubusercontent.com/hamburg1r/blog/refs/heads/main/blogs/fake-bank/Schema.png)
 
 As you can see in the attached schema diagram, we'll be having 4 entities: User, Account, PaymentTransaction, Ledger.
 
@@ -60,9 +61,9 @@ For the sake of simplicity we will calculate the balance from ledger service its
 
 **PaymentTransaction will go through these states:**
 
-![Payment Transaction states](./PaymentTransactionStates.png)
+![Payment Transaction states](https://raw.githubusercontent.com/hamburg1r/blog/refs/heads/main/blogs/fake-bank/PaymentTransactionStates.png)
 
-First transaction is created. Afterwards it goes to processing. When processed by settlement service it either succeeds or fails. If the transaction is failed we should add reversal entries in the ledger.
+Once a transaction is created it gets recorded in the ledger and moves to processing. The settlement service then does its thing if it succeeds, great. If it fails, we don't delete anything, we add reversal entries in the ledger instead. That's the double accounting part.
 
 # What's next
 We'll get the basic Spring Boot project set up. It's going to be a really basic crud application. We'll dabble a bit into transaction idempotency.
