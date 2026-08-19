@@ -31,7 +31,9 @@ CONFIG="$SCRIPT_DIR/config.json"
 
 mmdc --version >&2
 
-while IFS= read -r line; do
+# `read` returns 1 on EOF, so a last line without a trailing newline
+# would be skipped — that's the closing ``` on some files.
+while IFS= read -r line || [[ -n "$line" ]]; do
   # Match markdown fence block opening
   if [[ "$line" =~ ^[[:space:]]*\`\`\`mermaid ]]; then
     INSIDE_BLOCK=1
@@ -42,7 +44,6 @@ while IFS= read -r line; do
   # Match markdown fence block closing
   if [[ "$line" =~ ^[[:space:]]*\`\`\` ]] && [ $INSIDE_BLOCK -eq 1 ]; then
     INSIDE_BLOCK=0
-    
     echo "Processing diagram #$COUNT..." >&2
     
     export CURRENT_BLOCK
@@ -89,3 +90,13 @@ while IFS= read -r line; do
     CURRENT_BLOCK+="$line"$'\n'
   fi
 done < "$INPUT_SRC"
+
+if [ $INSIDE_BLOCK -eq 1 ]; then
+  echo "error: unclosed mermaid block (last line had no newline?)" >&2
+  exit 1
+fi
+
+if [ $COUNT -eq 1 ]; then
+  echo "error: no mermaid blocks found in $INPUT_SRC" >&2
+  exit 1
+fi

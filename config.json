@@ -1,6 +1,10 @@
 {
   "look": "handDrawn",
   "theme": "base",
+  "securityLevel": "loose",
+  "treeView": {
+    "showIcons": true
+  },
   "themeVariables": {
     "darkMode": true,
     "background": "#1a1b26",
@@ -18,6 +22,12 @@
     "clusterBkg": "#24283b",
     "clusterBorder": "#414868",
     "titleColor": "#f7768e",
-    "fontFamily": "ui-monospace"
+    "fontFamily": "ui-monospace",
+    "treeView": {
+      "labelColor": "#c0caf5",
+      "lineColor": "#9ece6a",
+      "iconColor": "#7aa2f7",
+      "descriptionColor": "#9ece6a"
+    }
   }
 }
