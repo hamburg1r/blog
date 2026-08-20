@@ -1,14 +1,14 @@
 ---
 published: true
 title: "Let's build a fake bank to learn backend engineering"
-cover_image: "https://raw.githubusercontent.com/hamburg1r/blog/refs/heads/main/blogs/fake-bank/Cover.png"
+cover_image: "https://raw.githubusercontent.com/hamburg1r/blog/refs/heads/main/blogs/fake-bank/post-01/Cover.png"
 description: "Building a fake bank to learn backend engineering in public — DB design, DDD architecture, and the decisions behind it all. Follow along."
-tags: java, backend, beginners, learning
+tags: java, spring, backend, learning
 series: Fake Bank, Real Problems
 canonical_url:
 ---
 
-My goal is to become a software architect. And the first step towards that? Becoming a really solid backend engineer.
+My goal is to become a software architect one day. And the first step towards that? Becoming a really solid backend engineer.
 
 So naturally, in my infinite wisdom, I asked ChatGPT for project ideas. I know, I know, but hear me out, because this one's actually a gem.
 
@@ -47,7 +47,7 @@ After all the basics are done we'll focus on kafka and later reconciliation.
 # The schema
 So, I have designed a rough schema for now. We'll update it as needed along the way.
 
-![DB Schema](https://raw.githubusercontent.com/hamburg1r/blog/refs/heads/main/blogs/fake-bank/Schema.png)
+![DB Schema](https://raw.githubusercontent.com/hamburg1r/blog/refs/heads/main/blogs/fake-bank/post-01/Schema.png)
 
 As you can see in the attached schema diagram, we'll be having 4 entities: User, Account, PaymentTransaction, Ledger.
 
@@ -61,7 +61,7 @@ For the sake of simplicity we will calculate the balance from ledger service its
 
 **PaymentTransaction will go through these states:**
 
-![Payment Transaction states](https://raw.githubusercontent.com/hamburg1r/blog/refs/heads/main/blogs/fake-bank/PaymentTransactionStates.png)
+![Payment Transaction states](https://raw.githubusercontent.com/hamburg1r/blog/refs/heads/main/blogs/fake-bank/post-01/PaymentTransactionStates.png)
 
 Once a transaction is created it gets recorded in the ledger and moves to processing. The settlement service then does its thing if it succeeds, great. If it fails, we don't delete anything, we add reversal entries in the ledger instead. That's the double accounting part.
 
