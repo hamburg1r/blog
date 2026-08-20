@@ -3,7 +3,7 @@ published: false
 title: "Fake Bank, Part 2: Idempotency, Ledgers, and Naming Things Against My Will"
 cover_image: "https://raw.githubusercontent.com/hamburg1r/blog/refs/heads/main/blogs/fake-bank/post-02/Cover.png"
 description: "Part 2 of building a fake bank in public — payment reversals, idempotency (and why it's overrated), journal entries, and a ledger endpoint naming battle I lost."
-tags: java, spring, backend, beginners, learning
+tags: java, spring, backend, learning
 series: Fake Bank, Real Problems
 canonical_url:
 ---
