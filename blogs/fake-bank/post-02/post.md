@@ -14,9 +14,54 @@ Jokes apart i've been busy just on this project :'). Although there has been som
 
 ## Folder structure
 So, currently I have started with a very basic DDD style structure:
-![Folder Structure](https://raw.githubusercontent.com/hamburg1r/blog/refs/heads/main/blogs/fake-bank/post-02/FolderStructure.png)
 
-I have per segregated every service into its own module and every module has its own set of packages: api, application, domain, error and infra. As you can already see in diagram.
+```text
+ledgerflow/
+├── docs/
+├── src/main/java/io/ledgerflow/
+│   ├── account/
+│   ├── ledger/
+│   ├── paymentTransaction/
+│   └── user/                 ← each module below
+├── flake.nix
+└── pom.xml
+```
+
+<details>
+<summary>Full package layout</summary>
+
+```text
+src/main/java/io/ledgerflow/
+├── LedgerflowApplication.java
+├── account/
+│   ├── api/
+│   ├── application/
+│   ├── domain/
+│   ├── error/
+│   └── infra/
+├── ledger/
+│   ├── api/
+│   ├── application/
+│   ├── domain/
+│   ├── error/
+│   └── infra/
+├── paymentTransaction/
+│   ├── api/
+│   ├── application/
+│   ├── domain/
+│   ├── error/
+│   └── infra/
+└── user/
+    ├── api/
+    ├── application/
+    ├── domain/
+    ├── error/
+    └── infra/
+```
+
+</details>
+
+I have segregated every service into its own module and every module has its own set of packages: api, application, domain, error and infra. As you can already see above.
 
 api - handles how to communicate with the world outside
 application - business logic goes here
