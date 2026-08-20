@@ -3,5 +3,10 @@
     "id": 3817950,
     "title": "Let's build a fake bank to learn backend engineering",
     "url": "https://dev.to/hamburgir/lets-build-a-fake-bank-to-learn-backend-engineering-4epa"
+  },
+  "blogs/fake-bank/post-02/post.md": {
+    "id": 4439112,
+    "title": "Fake Bank, Part 2: Idempotency, Ledgers, and Naming Things Against My Will",
+    "url": "https://dev.to/hamburgir/fake-bank-part-2-idempotency-ledgers-and-naming-things-against-my-will-4c8e-temp-slug-7798521"
   }
 }
