@@ -1,0 +1,87 @@
+name: Publish to DEV
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "blogs/**"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-devto
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install requests
+        run: pip install requests
+
+      - name: Find changed posts and publish
+        env:
+          DEVTO_API_KEY: ${{ secrets.DEVTO_API_KEY }}
+        run: |
+          set -euo pipefail
+
+          BEFORE="${{ github.event.before }}"
+          AFTER="${{ github.sha }}"
+
+          if [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+            mapfile -t changed < <(git ls-files 'blogs/**')
+          else
+            mapfile -t changed < <(git diff --name-only --diff-filter=ACMR "$BEFORE" "$AFTER" -- 'blogs/')
+          fi
+
+          posts=()
+          for f in "${changed[@]}"; do
+            [ -n "$f" ] || continue
+            dir="$(dirname "$f")"
+            while [ "$dir" != "." ] && [ "$dir" != "/" ]; do
+              if [ -f "$dir/post.md" ]; then
+                posts+=("$dir/post.md")
+                break
+              fi
+              dir="$(dirname "$dir")"
+            done
+          done
+
+          if [ "${#posts[@]}" -eq 0 ]; then
+            echo "No post.md files associated with changed blog paths."
+            exit 0
+          fi
+
+          mapfile -t unique_posts < <(printf '%s\n' "${posts[@]}" | sort -u)
+          echo "Publishing:"
+          printf '  %s\n' "${unique_posts[@]}"
+
+          for post in "${unique_posts[@]}"; do
+            python3 publish.py "$post"
+          done
+
+      - name: Commit updated metadata
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add -- devto_articles.json
+          if git diff --cached --quiet -- devto_articles.json; then
+            echo "devto_articles.json unchanged."
+            exit 0
+          fi
+
+          git commit -m "Update DEV.to article metadata"
+          git push

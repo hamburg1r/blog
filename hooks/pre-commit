@@ -1,0 +1,167 @@
+#!/usr/bin/env bash
+# Rewrite relative image URLs in staged markdown to GitHub raw URLs
+# derived from the current branch's remote.
+set -euo pipefail
+
+ROOT="$(git rev-parse --show-toplevel)"
+cd "$ROOT"
+
+branch="$(git rev-parse --abbrev-ref HEAD)"
+if [ "$branch" = "HEAD" ]; then
+  branch="$(git symbolic-ref -q refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@' || true)"
+  branch="${branch:-main}"
+fi
+
+remote="$(git config --get "branch.${branch}.remote" || true)"
+remote="${remote:-origin}"
+
+if ! origin_url="$(git remote get-url "$remote" 2>/dev/null)"; then
+  echo "pre-commit: no git remote named '$remote'" >&2
+  exit 1
+fi
+
+owner=""
+repo=""
+case "$origin_url" in
+  *github.com*)
+    path="${origin_url#*github.com[:/]}"
+    path="${path%.git}"
+    path="${path%/}"
+    owner="${path%%/*}"
+    repo="${path#*/}"
+    repo="${repo%%/*}"
+    ;;
+  *)
+    echo "pre-commit: remote '$remote' is not GitHub ($origin_url)" >&2
+    echo "pre-commit: cannot build raw.githubusercontent.com URLs" >&2
+    exit 1
+    ;;
+esac
+
+if [ -z "$owner" ] || [ -z "$repo" ]; then
+  echo "pre-commit: failed to parse owner/repo from $origin_url" >&2
+  exit 1
+fi
+
+url_prefix="https://raw.githubusercontent.com/${owner}/${repo}/refs/heads/${branch}"
+
+mapfile -t files < <(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(md|markdown)$' || true)
+
+if [ "${#files[@]}" -eq 0 ]; then
+  exit 0
+fi
+
+changed_any=0
+for file in "${files[@]}"; do
+  [ -f "$file" ] || continue
+
+  status=0
+  perl - "$file" "$url_prefix" <<'PERL' || status=$?
+use strict;
+use warnings;
+use File::Basename qw(dirname);
+
+my ($file, $prefix) = @ARGV;
+
+sub is_relative {
+    my ($url) = @_;
+    return 0 if !defined $url || $url eq "";
+    return 0 if $url =~ m{^[a-zA-Z][a-zA-Z0-9+.-]*:};
+    return 0 if $url =~ m{^//};
+    return 0 if $url =~ m{^#};
+    return 1;
+}
+
+sub normalize_repo_path {
+    my ($md_file, $rel) = @_;
+    $rel =~ s{\\}{/}g;
+    $rel =~ s{^\./}{};
+    my $base = dirname($md_file);
+    $base = "" if $base eq ".";
+    my $joined = length($base) ? "$base/$rel" : $rel;
+    $joined =~ s{^/+}{};
+    my @out;
+    for my $part (split m{/+}, $joined) {
+        next if $part eq "" || $part eq ".";
+        if ($part eq "..") {
+            pop @out if @out;
+            next;
+        }
+        push @out, $part;
+    }
+    return join("/", @out);
+}
+
+sub to_raw {
+    my ($md_file, $url) = @_;
+    return $url unless is_relative($url);
+    my $path = $url;
+    my $fragment = "";
+    $fragment = $1 if $path =~ s{(#.*)$}{};
+    $path =~ s{\?.*}{};
+    my $repo_path = normalize_repo_path($md_file, $path);
+    return $url unless length $repo_path;
+    $repo_path =~ s{ }{%20}g;
+    return "$prefix/$repo_path$fragment";
+}
+
+open my $fh, "<:raw", $file or die "can't read $file: $!";
+local $/;
+my $content = <$fh>;
+close $fh;
+my $original = $content;
+
+$content =~ s{
+    (!\[[^\]]*\]\(\s*<?)
+    ([^)\s>]+)
+    (>?)
+}{
+    $1 . to_raw($file, $2) . $3
+}gex;
+
+$content =~ s{
+    ^([ \t]*cover_image:[ \t]*)
+    (?:
+        "([^"]*)" |
+        '([^']*)' |
+        (\S+)
+    )
+}{
+    my $key = $1;
+    my $url = defined $2 ? $2 : defined $3 ? $3 : $4;
+    my $new = to_raw($file, $url);
+    $key . '"' . $new . '"';
+}gmex;
+
+$content =~ s{
+    (<img\b[^>]*\bsrc=)
+    (["'])
+    (.*?)
+    \2
+}{
+    $1 . $2 . to_raw($file, $3) . $2
+}gixe;
+
+if ($content eq $original) {
+    exit 0;
+}
+
+open my $out, ">:raw", $file or die "can't write $file: $!";
+print $out $content;
+close $out;
+exit 10;
+PERL
+
+  if [ "$status" -eq 10 ]; then
+    git add -- "$file"
+    echo "pre-commit: rewrote relative image URLs in $file" >&2
+    changed_any=1
+  elif [ "$status" -ne 0 ]; then
+    echo "pre-commit: failed rewriting $file" >&2
+    exit 1
+  fi
+done
+
+if [ "$changed_any" -eq 1 ]; then
+  echo "pre-commit: image URLs now use $url_prefix/..." >&2
+fi
